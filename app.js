@@ -2,6 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const graphqlHttp = require('express-graphql');
 const { buildSchema } = require('graphql');
+const mongoose = require('mongoose');
+
+const Event = require('./models/event');
 
 const app = express();
 
@@ -46,19 +49,36 @@ app.use(
         `),
         rootValue: {
             events: () => {
-                return events;
+                // add 'return' because it's asynchronous 
+                return Event
+                    .find() // eq ({title: 'A Test'}) or empty () for all results
+                    .then(events => {
+                        return events.map(event => {
+                            return { ...event._doc }; // _id: event._doc._id.toString() in case of value type error / or just _id: event.id
+                        });
+                    })
+                    .catch(err => {
+                        throw err;
+                    })
             },
-            createEvent: (args) => {
-                const event = {
-                    _id: Math.random().toString(),
+            createEvent: args => {
+                const event = new Event({
                     title: args.eventInput.title,
                     description: args.eventInput.description,
                     price: +args.eventInput.price,
-                    date: args.eventInput.date
-
-                };
-                events.push(event)
+                    date: new Date(args.eventInput.date)
+                });
+                // returning promise 
                 return event
+                    .save() // write data to database
+                    .then(result => {
+                        console.log(result);
+                        return { ...result._doc }; // + meta data
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        throw err;
+                    })
             }
         },
         graphiql: true
@@ -66,4 +86,17 @@ app.use(
     })
 );
 
-app.listen(3000);
+mongoose.connect(
+    `mongodb+srv://${
+    process.env.MONGO_USER
+    }:${
+    process.env.MONGO_PASSWORD
+    }@cluster0-nv2f3.mongodb.net/${
+    process.env.MONGO_DB
+    }?retryWrites=true`)
+    .then(() => {
+        app.listen(3000);
+    })
+    .catch(err => {
+        console.log(err);
+    })
