@@ -3,7 +3,10 @@ const Booking = require('../../models/booking');
 const { transformBooking, transformEvent } = require('./merge');
 
 module.exports = {
-    bookings: async () => {
+    bookings: async (args, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!');
+        }
         try {
             const bookings = await Booking.find();
             return bookings.map(booking => {
@@ -13,16 +16,22 @@ module.exports = {
             throw err;
         }
     },
-    bookEvent: async args => {
+    bookEvent: async (args, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!');
+        }
         const fetchedEvent = await Event.findOne({ _id: args.eventId })
         const booking = new Booking({
-            user: '5c75886d6691549f1bfb0cf9',
+            user: req.userId,
             event: fetchedEvent
         });
         const result = await booking.save();
         return transformBooking(result);
     },
-    cancelBooking: async args => {
+    cancelBooking: async (args, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!');
+        }
         try {
             const booking = await Booking.findById(args.bookingId).populate('event');
             const event = transformEvent(booking.event); // we don't need booking._doc.event beacuse fileds of entity are always avaiable on the top level 
