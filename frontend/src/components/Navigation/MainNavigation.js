@@ -13,7 +13,7 @@ const mainNavigation = props => {
                 <ul>
                     <li><NavLink to="/auth">Authenticate</NavLink></li>
                     <li><NavLink to="/events">Events</NavLink></li>
-                    <li><NavLink to="/bookings">bookings</NavLink></li>
+                    <li><NavLink to="/bookings">Bookings</NavLink></li>
                 </ul>
             </div>
         </header>
