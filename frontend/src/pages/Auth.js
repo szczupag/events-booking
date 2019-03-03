@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 
 import './Auth.css';
+import AuthContext from '../context/auth-context';
 
 class AuthPage extends Component {
     state = {
         isLogin: true
     }
+
+    static contextType = AuthContext;
 
     constructor(props) {
         super(props);
@@ -15,7 +18,7 @@ class AuthPage extends Component {
 
     switchModeHandler = () => {
         this.setState(prevState => {
-            return {isLogin: !prevState.isLogin}
+            return { isLogin: !prevState.isLogin }
         })
     }
 
@@ -41,7 +44,7 @@ class AuthPage extends Component {
             `
         };
 
-        if(!this.state.isLogin){
+        if (!this.state.isLogin) {
             requestBody = {
                 query: `
                     mutation {
@@ -68,7 +71,13 @@ class AuthPage extends Component {
                 return res.json();
             })
             .then(resData => {
-                console.log(resData)
+                if (resData.data.login.token) {
+                    this.context.login(
+                        resData.data.login.token,
+                        resData.data.login.userId,
+                        resData.data.login.tokenExpiration
+                    );
+                }
             })
             .catch(err => {
                 console.log(err);
@@ -87,8 +96,8 @@ class AuthPage extends Component {
                     <input type="password" id="password" ref={this.passwordEl} />
                 </div>
                 <div className="form-actions">
-                    <button type="submit">Submit</button>
-                    <button type="button" onClick={this.switchModeHandler} >Switch to {this.state.isLogin?'Sign Up':'Login'}</button>
+                    <button type="submit">{this.state.isLogin ? 'Sign In' : 'Sign Up'}</button>
+                    <button type="button" onClick={this.switchModeHandler} >Switch to {this.state.isLogin ? 'Sign Up' : 'Sign In'}</button>
                 </div>
             </form>
         );
