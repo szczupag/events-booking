@@ -16,7 +16,7 @@ module.exports = {
                 password: hashedPassword
             });
             const result = await user.save();
-            return { ...result._doc, password: null }
+            return { ...result._doc, password: null, _id: result.id }
         } catch (err) {
             throw err;
         };
@@ -30,7 +30,7 @@ module.exports = {
         if (!isEqual) {
             throw new Error('Password is incorrect!');
         }
-        const token = jwt.sign({ userId: user.distinct, email: user.email }, 
+        const token = jwt.sign({ userId: user.id, email: user.email }, 
             'somesupersecretkey', // string used to hash the token, required for validating
             { 
                 expiresIn: '1h'
