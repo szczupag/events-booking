@@ -21,7 +21,7 @@ const modal = props => {
                         <button 
                             className="btn"
                             onClick={props.onConfirm}
-                        >Confirm</button>}
+                        >{props.confirmText}</button>}
                 </section>
             </div>
         </React.Fragment>
