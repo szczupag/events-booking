@@ -56,17 +56,23 @@ class EventsPage extends Component {
 
         const requestBody = {
             query: `
-                mutation {
-                    createEvent(eventInput: {title: "${title}",description: "${description}", price: ${price}, date: "${date}"}) {
-                        _id
-                        title
-                        description
-                        date
-                        price
-                    }
+                mutation CreateEvent($title: String!, $desc: String!, $price: Float!, $date: String!) {
+                  createEvent(eventInput: {title: $title, description: $desc, price: $price, date: $date}) {
+                    _id
+                    title
+                    description
+                    date
+                    price
+                  }
                 }
-            `
-        }
+              `,
+            variables: {
+                title: title,
+                desc: description,
+                price: price,
+                date: date
+            }
+        };
 
         const token = this.context.token;
 
@@ -91,14 +97,14 @@ class EventsPage extends Component {
                         _id: resData.data.createEvent._id,
                         title: resData.data.createEvent.title,
                         description: resData.data.createEvent.description,
-                        date: resData.data.createEvent.data,
+                        date: resData.data.createEvent.date,
                         price: resData.data.createEvent.price,
                         creator: {
                             _id: this.context.userId
                         }
                     });
                     return { events: updatedEvents };
-                })
+                });
             })
             .catch(err => {
                 console.log(err);
@@ -144,7 +150,7 @@ class EventsPage extends Component {
             })
             .then(resData => {
                 const events = resData.data.events;
-                if(this.isActive){
+                if (this.isActive) {
                     this.setState({
                         events: events,
                         isLoading: false
@@ -153,7 +159,7 @@ class EventsPage extends Component {
             })
             .catch(err => {
                 console.log(err);
-                if(this.isActive){
+                if (this.isActive) {
                     this.setState({ isLoading: false })
                 }
             });
@@ -167,21 +173,24 @@ class EventsPage extends Component {
     }
 
     bookEventHandler = () => {
-        if(!this.context.token){
-            this.setState({selectedEvent: null});
+        if (!this.context.token) {
+            this.setState({ selectedEvent: null });
             return;
         }
         const requestBody = {
             query: `
-                mutation {
-                    bookEvent(eventId: "${this.state.selectedEvent._id}") {
-                        _id
-                        createdAt
-                        updatedAt
-                    }
+              mutation BookEvent($id: ID!) {
+                bookEvent(eventId: $id) {
+                  _id
+                 createdAt
+                 updatedAt
                 }
-            `
-        }
+              }
+            `,
+            variables: {
+                id: this.state.selectedEvent._id
+            }
+        };
 
         fetch('http://localhost:8000/graphql', {
             method: 'POST',
@@ -199,14 +208,14 @@ class EventsPage extends Component {
             })
             .then(resData => {
                 console.log(resData);
-                this.setState({selectedEvent: null});
+                this.setState({ selectedEvent: null });
             })
             .catch(err => {
                 console.log(err);
             });
     };
 
-    componentWillUnmount(){
+    componentWillUnmount() {
         this.isActive = false;
     }
 
@@ -220,9 +229,9 @@ class EventsPage extends Component {
                         title={this.state.selectedEvent.title}
                         canCancel
                         canConfirm
-                        confirmText={this.context.token?"Book":"Confirm"}
+                        confirmText={this.context.token ? "Book" : "Confirm"}
                         onCancel={this.modalCancelHandler}
-                        onConfirm={this.bookEventHandler}                        
+                        onConfirm={this.bookEventHandler}
                     >
                         <h1>{this.state.selectedEvent.title}</h1>
                         <h2>{this.state.selectedEvent.price} PLN <span>{new Date(this.state.selectedEvent.date).toLocaleDateString()}</span></h2>
@@ -236,7 +245,7 @@ class EventsPage extends Component {
                         canConfirm
                         confirmText="Confirm"
                         onCancel={this.modalCancelHandler}
-                        onConfirm={this.bookEventHandler}
+                        onConfirm={this.modalConfirmHandler}
                     >
                         <form>
                             <div className="form-control">
